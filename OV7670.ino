@@ -3,6 +3,9 @@
 #include <util/twi.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
+#include <SD.h>
+
+int CS_Pin = 10;
 
 #define F_CPU 16000000UL
 #define vga   0
@@ -585,6 +588,24 @@ void setup(){
   setResolution();
   setColor();
  writeReg(0x11, 13); //Earlier it had the value:writeReg(0x11, 12); New version works better for me :) !!!!
+ Serial.begin(9600);
+  pinMode(CS_Pin, OUTPUT);
+ if (SD.begin(CS_Pin)) {
+Serial.println("Card Initialization Successful!");
+}else{
+Serial.println("Card Initialization Failed!");
+}
+
+File dataFile = SD.open("test.bmp", FILE_WRITE);
+
+for(int i=0;i<240;i++){
+for(int j=0;j<320;j++){
+dataFile.write(0x77);
+}
+}
+
+dataFile.close();
+}
 }
 
 void loop(){
