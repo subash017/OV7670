@@ -1,5 +1,3 @@
-
-
 #include <Wire.h>
 #include <SD.h>
 int CS_Pin = 10;
@@ -27,7 +25,6 @@ void Init_QVGA(){
   }
 
 void Init_OV7670(){
-  //Reset All Register Values
   WriteOV7670(0x12,0x80);
   delay(100);
   WriteOV7670(0x3A, 0x04); //TSLB
@@ -49,27 +46,17 @@ void Init_OV7670(){
   }
 
 void WriteOV7670(byte regID, byte regVal){
-  // Slave 7-bit address is 0x21.
-  // R/W bit set automatically by Wire functions
-  // dont write 0x42 or 0x43 for slave address
   Wire.beginTransmission(0x21);
-  // Reset all register values
   Wire.write(regID);  
   Wire.write(regVal);
   Wire.endTransmission();
-  delay(1);
-  
+  delay(1); 
   }
 
 void ReadOV7670(byte regID){
-  // Reading from a register is done in two steps
-  // Step 1: Write register address to the slave 
-  // from which data is to be read. 
   Wire.beginTransmission(0x21); // 7-bit Slave address
   Wire.write(regID);  // reading from register 0x11
   Wire.endTransmission();
-
-  // Step 2: Read 1 byte from Slave
   Wire.requestFrom(0x21, 1);
   Serial.print("Read request Status:");
   Serial.println(Wire.available());
@@ -80,27 +67,12 @@ void ReadOV7670(byte regID){
 
 void XCLK_SETUP(void){
   pinMode(9, OUTPUT); //Set pin 9 to output
-  
-  //Initialize timer 1
-  
-  //WGM13, WGM12, WGM11 & WGM10 bits SET- Fast PWM mode
-  //COM1A0 SET- Toggle OC1A on compare match
   TCCR1A = (1 << COM1A0) | (1 << WGM11) | (1 << WGM10);
   //SET CS10 bit for clock select with no prescaling
   TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS10); 
-  //Output Compare Register 1A(OCR1A) = 0
-  //This will lead to a match on every clock cycle
-  //Toggle OC1A output pin on every match instance
-  //Therefore, the generated waveform will have half
-  //the frequency of the driving clock i.e. 8Mhz
-  //OC1A pin- PB1 (alternate functn) pin i.e. Arduino pin 9
   OCR1A = 0;
-
 }
 
-// Two Wire Interface Setup
-// Sets the frequency of the SCL line
-// Default is 100KHz so we won't use this function
 void TWI_SETUP(void){
   //Set prescaler bits in TWI Status Register (TWSR) to 0
   TWSR &= ~3;
@@ -108,22 +80,13 @@ void TWI_SETUP(void){
   //SCLfreq = CPUfreq/(16 + 2(TWBR) - 4^(TWPS))
   //TWBR = 72, TWPS(prescaler) = 0
   TWBR = 72;
-
 }
 
 void OV7670_PINS(void){
-  //Setup Data input pins and Interrupt pins
-  //DDRC bits 3:0 = 0 =>  bits configured as Data Inputs
-  //DDRC 3:0 - A3,A2,A1,A0
-  DDRC &= ~15;//low d0-d3 camera
   
-  //~(0b11111100) = 0b00000011
-  //make DDRD 7:2 = 0 => Inputs
-  //d7-d4 as data inputs, d3-INT1 is VSYNC and d2-INT0 is PCLK
+  DDRC &= ~15;//low d0-d3 camera
   DDRD &= ~252;
 }
-
-
 
 void QVGA_Image(String title){
   int h,w;
@@ -144,7 +107,6 @@ void QVGA_Image(String title){
       while (!(PIND & 4));  //wait for high
     }
     dataFile.write(dataBuffer,320);
-
     
   }
 
@@ -174,7 +136,6 @@ void setup(){
  
 }
 
-
 void loop(){
   QVGA_Image("0.bmp");
   QVGA_Image("1.bmp");
@@ -182,8 +143,5 @@ void loop(){
   QVGA_Image("3.bmp");
   QVGA_Image("4.bmp");
   QVGA_Image("5.bmp");
-  QVGA_Image("6.bmp");
-  QVGA_Image("7.bmp");
-  QVGA_Image("8.bmp");
   while(1);
 }
